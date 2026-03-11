@@ -553,8 +553,19 @@ jobs:
           fetch-depth: 0
       - name: コミットメッセージの形式を検証
         run: |
+          BRANCH=${GITHUB_REF#refs/heads/}
           VALID_PREFIXES="^(feat|fix|chore|docs|style|refactor|test|perf):"
-          git log origin/develop..HEAD --pretty=format:"%s" | while read msg; do
+
+          # ブランチの分岐元に応じて基点を切り替える
+          # hotfix/* は main から分岐するため origin/main を基点とする
+          # feature/*, release/* は develop から分岐するため origin/develop を基点とする
+          if echo "$BRANCH" | grep -qE "^hotfix/"; then
+            BASE="origin/main"
+          else
+            BASE="origin/develop"
+          fi
+
+          git log ${BASE}..HEAD --pretty=format:"%s" | while read msg; do
             if ! echo "$msg" | grep -qE "$VALID_PREFIXES"; then
               # マージコミットは除外
               if ! echo "$msg" | grep -qE "^Merge "; then
@@ -602,7 +613,16 @@ jobs:
             exit 0
           fi
 
-          if git log origin/main..HEAD --pretty=format:"%s" | grep -qE "^feat:"; then
+          # ブランチの分岐元に応じて基点を切り替える
+          # hotfix/* は main から分岐するため origin/main を基点とする
+          # feature/*, release/* は develop から分岐するため origin/develop を基点とする
+          if echo "$BRANCH" | grep -qE "^hotfix/"; then
+            BASE="origin/main"
+          else
+            BASE="origin/develop"
+          fi
+
+          if git log ${BASE}..HEAD --pretty=format:"%s" | grep -qE "^feat:"; then
             echo "ERROR: $BRANCH ブランチに feat: コミットが含まれています。"
             echo "release/hotfix ブランチでの新機能追加は git-flow のルール違反です。"
             exit 1
