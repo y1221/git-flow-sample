@@ -1,0 +1,32 @@
+# .github/workflows/check-commit-message.yml
+name: Check Commit Message
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+    types: [opened, synchronize, reopened]
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: コミットメッセージの形式を検証
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          VALID_PREFIXES="^(feat|fix|chore|docs|style|refactor|test|perf):"
+          git log $BASE_SHA..HEAD --pretty=format:"%s" | while read msg; do
+            if ! echo "$msg" | grep -qE "$VALID_PREFIXES"; then
+              # マージコミットは除外
+              if ! echo "$msg" | grep -qE "^Merge "; then
+                echo "ERROR: 不正なコミットメッセージ: \"$msg\""
+                echo "形式: <接頭辞>: <内容>  例) feat: ログイン機能を追加"
+                exit 1
+              fi
+            fi
+          done

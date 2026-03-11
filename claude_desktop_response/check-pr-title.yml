@@ -1,0 +1,25 @@
+# .github/workflows/check-pr-title.yml
+name: Check PR Title
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: PRタイトルの形式を検証
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          VALID_PREFIXES="^(feat|fix|chore|docs|style|refactor|test|perf):"
+          MERGE_PATTERN="^Merge branch"
+          if ! echo "$PR_TITLE" | grep -qE "$VALID_PREFIXES|$MERGE_PATTERN"; then
+            echo "ERROR: PRタイトルが規約に沿っていません: \"$PR_TITLE\""
+            echo "形式: <接頭辞>: <内容>  例) feat: ログイン機能を追加"
+            exit 1
+          fi

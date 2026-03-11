@@ -1,0 +1,32 @@
+# .github/workflows/check-branch-commit-rule.yml
+name: Check Branch Commit Rule
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-no-feat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: feat:コミットが含まれていないか確認
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          # release/* または hotfix/* からのPRのみを検査対象とする
+          if ! echo "$HEAD_REF" | grep -qE "^(release|hotfix)/"; then
+            echo "SKIP: 対象外のブランチです ($HEAD_REF)"
+            exit 0
+          fi
+
+          if git log $BASE_SHA..HEAD --pretty=format:"%s" | grep -qE "^feat:"; then
+            echo "ERROR: $HEAD_REF ブランチに feat: コミットが含まれています。"
+            echo "release/hotfix ブランチでの新機能追加は git-flow のルール違反です。"
+            exit 1
+          fi

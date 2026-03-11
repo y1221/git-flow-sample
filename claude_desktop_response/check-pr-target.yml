@@ -1,0 +1,35 @@
+# .github/workflows/check-pr-target.yml
+name: Check PR Target Branch
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-target:
+    runs-on: ubuntu-latest
+    steps:
+      - name: PRのマージ先ブランチを検証
+        env:
+          HEAD: ${{ github.head_ref }}
+          BASE: ${{ github.base_ref }}
+        run: |
+          if echo "$HEAD" | grep -qE "^feature/"; then
+            if [ "$BASE" != "develop" ]; then
+              echo "ERROR: feature/* ブランチのマージ先は develop でなければなりません。(現在: $BASE)"
+              exit 1
+            fi
+          elif echo "$HEAD" | grep -qE "^release/"; then
+            if [ "$BASE" != "main" ] && [ "$BASE" != "develop" ]; then
+              echo "ERROR: release/* ブランチのマージ先は main または develop でなければなりません。(現在: $BASE)"
+              exit 1
+            fi
+          elif echo "$HEAD" | grep -qE "^hotfix/"; then
+            if [ "$BASE" != "main" ] && [ "$BASE" != "develop" ]; then
+              echo "ERROR: hotfix/* ブランチのマージ先は main または develop でなければなりません。(現在: $BASE)"
+              exit 1
+            fi
+          fi
