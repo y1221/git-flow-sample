@@ -465,27 +465,27 @@ git-flowのルールをGitHub上で技術的に強制するための設定です
 
 `main` は本番コードのみを管理するため、直接pushを完全に禁止し、必ずレビューを通す構成にします。
 
-| 設定項目                                                           | 推奨値                                                                                                                             | 理由                                                                                                               |
-| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| **Require a pull request before merging**                          | ✅ 有効                                                                                                                            | 直接pushを禁止。必ずPR経由にする                                                                                   |
-| └ Required approvals                                               | `1` 以上                                                                                                                           | レビューなしのマージを防ぐ                                                                                         |
-| └ Dismiss stale pull request approvals when new commits are pushed | ✅ 有効                                                                                                                            | 承認後に差し込まれた変更を見落とさない                                                                             |
-| **Require status checks to pass before merging**                   | ✅ 有効<br>以下CIチェックを登録<br>`check-branch-commit-rule` / `check-pr-title` / `check-pr-target`<br>（詳細はセクション12参照） | CIが通ったコードのみマージ可能にする。これらのチェックを登録することで、違反があればPRのマージ自体をブロックできる |
-| └ Require branches to be up to date before merging                 | ✅ 有効                                                                                                                            | マージ前に最新状態との差分を解消させる                                                                             |
-| **Require linear history**                                         | ❌ 無効                                                                                                                            | git-flowは `--no-ff` でマージコミットを作るため、有効にすると矛盾する（後述）                                      |
-| **Do not allow bypassing the above settings**                      | ✅ 有効                                                                                                                            | 管理者も例外なくルールに従う                                                                                       |
-| **Restrict who can push to matching branches**                     | ✅ 有効                                                                                                                            | release・hotfix担当者のみに限定                                                                                    |
+| 設定項目                                                           | 推奨値                                                                                                                                                      | 理由                                                                                                               |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Require a pull request before merging**                          | ✅ 有効                                                                                                                                                     | 直接pushを禁止。必ずPR経由にする                                                                                   |
+| └ Required approvals                                               | `1` 以上                                                                                                                                                    | レビューなしのマージを防ぐ                                                                                         |
+| └ Dismiss stale pull request approvals when new commits are pushed | ✅ 有効                                                                                                                                                     | 承認後に差し込まれた変更を見落とさない                                                                             |
+| **Require status checks to pass before merging**                   | ✅ 有効<br>以下CIチェックを登録<br>`check-commit-message` / `check-branch-commit-rule` / `check-pr-title` / `check-pr-target`<br>（詳細はセクション12参照） | CIが通ったコードのみマージ可能にする。これらのチェックを登録することで、違反があればPRのマージ自体をブロックできる |
+| └ Require branches to be up to date before merging                 | ✅ 有効                                                                                                                                                     | マージ前に最新状態との差分を解消させる                                                                             |
+| **Require linear history**                                         | ❌ 無効                                                                                                                                                     | git-flowは `--no-ff` でマージコミットを作るため、有効にすると矛盾する（後述）                                      |
+| **Do not allow bypassing the above settings**                      | ✅ 有効                                                                                                                                                     | 管理者も例外なくルールに従う                                                                                       |
+| **Restrict who can push to matching branches**                     | ✅ 有効                                                                                                                                                     | release・hotfix担当者のみに限定                                                                                    |
 
 ### Branch protection rules：`develop` ブランチ（中程度の保護）
 
 `develop` はfeatureブランチの統合先です。mainよりは緩めつつ、直接pushは禁止します。
 
-| 設定項目                                         | 推奨値                                                                                                                         | 理由                                                                                                               |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| **Require a pull request before merging**        | ✅ 有効                                                                                                                        | featureブランチは必ずPR経由でマージ                                                                                |
-| └ Required approvals                             | `1` 以上                                                                                                                       | コードレビューを必須化                                                                                             |
-| **Require status checks to pass before merging** | ✅ 有効<br>以下CIチェックを登録<br>`check-commit-message` / `check-pr-title` / `check-pr-target`<br>（詳細はセクション12参照） | CIが通ったコードのみマージ可能にする。これらのチェックを登録することで、違反があればPRのマージ自体をブロックできる |
-| **Do not allow bypassing the above settings**    | ✅ 有効                                                                                                                        | 管理者も同様に従う                                                                                                 |
+| 設定項目                                         | 推奨値                                                                                                                                                      | 理由                                                                                                               |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Require a pull request before merging**        | ✅ 有効                                                                                                                                                     | featureブランチは必ずPR経由でマージ                                                                                |
+| └ Required approvals                             | `1` 以上                                                                                                                                                    | コードレビューを必須化                                                                                             |
+| **Require status checks to pass before merging** | ✅ 有効<br>以下CIチェックを登録<br>`check-commit-message` / `check-branch-commit-rule` / `check-pr-title` / `check-pr-target`<br>（詳細はセクション12参照） | CIが通ったコードのみマージ可能にする。これらのチェックを登録することで、違反があればPRのマージ自体をブロックできる |
+| **Do not allow bypassing the above settings**    | ✅ 有効                                                                                                                                                     | 管理者も同様に従う                                                                                                 |
 
 ### Rulesets：ブランチ命名規則の技術的強制
 
@@ -579,6 +579,7 @@ name: Check Branch Commit Rule
 on:
   push:
     branches:
+      - "feature/**" # ★ 即スキップ（PR必須ステータスチェック対応用）
       - "release/**"
       - "hotfix/**"
 
@@ -592,6 +593,15 @@ jobs:
       - name: feat:コミットが含まれていないか確認
         run: |
           BRANCH=${GITHUB_REF#refs/heads/}
+
+          # ============================================================
+          # feature/* は feat: コミットが許可されているためスキップ
+          # ============================================================
+          if echo "$BRANCH" | grep -qE "^feature/"; then
+            echo "SKIP: feature/* ブランチはこのチェックの対象外です。"
+            exit 0
+          fi
+
           if git log origin/main..HEAD --pretty=format:"%s" | grep -qE "^feat:"; then
             echo "ERROR: $BRANCH ブランチに feat: コミットが含まれています。"
             echo "release/hotfix ブランチでの新機能追加は git-flow のルール違反です。"
