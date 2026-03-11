@@ -403,7 +403,82 @@ closes #42
 
 ---
 
-## 11. よく使うコマンドチートシート
+## 11. 補足：GitHubのブランチ保護ルール
+
+git-flowのルールをGitHub上で技術的に強制するための設定です。GitHubには設定機能が2種類あり、用途によって使い分けます。
+
+| 機能 | 場所 | 用途 |
+|------|------|------|
+| **Branch protection rules** | Settings → Branches → Branch protection rules | 特定ブランチの操作（push / merge）を保護する |
+| **Rulesets** | Settings → Branches → Rulesets | ブランチの作成自体を命名規則で制限する |
+
+> **適用範囲について**: これらの設定はいずれも**リモートリポジトリ（GitHub）にのみ**適用されます。ローカルでは引き続きどんなブランチ名でも作成できますが、規則に違反したブランチをGitHubへpushしようとした時点で拒否されます。
+
+---
+
+### Branch protection rules：`main` ブランチ（最も厳格に保護）
+
+`main` は本番コードのみを管理するため、直接pushを完全に禁止し、必ずレビューを通す構成にします。
+
+| 設定項目 | 推奨値 | 理由 |
+|---------|--------|------|
+| **Require a pull request before merging** | ✅ 有効 | 直接pushを禁止。必ずPR経由にする |
+| └ Required approvals | `1` 以上 | レビューなしのマージを防ぐ |
+| └ Dismiss stale pull request approvals when new commits are pushed | ✅ 有効 | 承認後に差し込まれた変更を見落とさない |
+| **Require status checks to pass before merging** | ✅ 有効 | CIが通ったコードのみマージ可能にする |
+| └ Require branches to be up to date before merging | ✅ 有効 | マージ前に最新状態との差分を解消させる |
+| **Require linear history** | ❌ 無効 | git-flowは `--no-ff` でマージコミットを作るため、有効にすると矛盾する（後述） |
+| **Do not allow bypassing the above settings** | ✅ 有効 | 管理者も例外なくルールに従う |
+| **Restrict who can push to matching branches** | ✅ 有効 | release・hotfix担当者のみに限定 |
+
+### Branch protection rules：`develop` ブランチ（中程度の保護）
+
+`develop` はfeatureブランチの統合先です。mainよりは緩めつつ、直接pushは禁止します。
+
+| 設定項目 | 推奨値 | 理由 |
+|---------|--------|------|
+| **Require a pull request before merging** | ✅ 有効 | featureブランチは必ずPR経由でマージ |
+| └ Required approvals | `1` 以上 | コードレビューを必須化 |
+| **Require status checks to pass before merging** | ✅ 有効 | テスト・Lintが通ることを保証 |
+| **Do not allow bypassing the above settings** | ✅ 有効 | 管理者も同様に従う |
+
+### Rulesets：ブランチ命名規則の技術的強制
+
+**Settings → Branches → Rulesets** で以下のように設定することで、規則に違反したブランチ名でのpushをGitHubが拒否します。
+
+```
+【Ruleset の設定】
+対象 (Target branches): All branches
+ルール: Restrict creations（ブランチ作成を制限）
+許可するパターン (Bypass list に追加):
+  - main
+  - develop
+  - feature/*
+  - release/*
+  - hotfix/*
+```
+
+上記以外の名前でpushしようとすると、GitHubがエラーで拒否します。ローカルでの作業は制限されないため、開発者は一時的なブランチを自由に作れますが、リモートへの反映段階でルールが適用されます。
+
+### 保護レベルの全体像
+
+```
+main        ─── 最厳格：PR必須 / 承認必須 / CI必須 / 直接push完全禁止  ┐
+develop     ─── 中程度：PR必須 / 承認必須 / CI必須 / 直接push禁止      ┤ Branch protection rules
+                                                                      ┘
+feature/*   ─── 命名規則のみ強制（pushの内容は制限なし）               ┐
+release/*   ─── 命名規則のみ強制（pushの内容は制限なし）               ┤ Rulesets
+hotfix/*    ─── 命名規則のみ強制（pushの内容は制限なし）               ┘
+その他       ─── push自体を拒否                                        ┘ Rulesets
+```
+
+### `Require linear history` を有効にしてはいけない理由
+
+git-flowは `--no-ff` によるマージコミットを戦略の中核に置いています。`Require linear history`（squash / rebaseのみ許可）を有効にするとマージコミットが作れなくなり、フィーチャーの境界がコミットツリーから消えてしまいます。この設定はGitHub Flow向けであり、git-flowとは相性が悪いため **必ず無効** にします。
+
+---
+
+## 12. よく使うコマンドチートシート
 
 ```bash
 # ブランチ確認（全ブランチ表示）
